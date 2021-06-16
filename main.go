@@ -7,6 +7,13 @@ import (
 	"os"
 )
 
+type Quiz struct {
+	question string
+	answer   string
+}
+
+type Quizzes = []Quiz
+
 func loadQuizzesFile() ([][]string, error) {
 	file, err := os.Open("./problems.csv")
 	if err != nil {
@@ -18,6 +25,21 @@ func loadQuizzesFile() ([][]string, error) {
 	return csvReader.ReadAll()
 }
 
+func parseDataQuizzes(dataQuizzes [][]string) Quizzes {
+	var quizzes Quizzes
+
+	for _, data := range dataQuizzes {
+		quiz := Quiz{
+			question: data[0],
+			answer:   data[1],
+		}
+
+		quizzes = append(quizzes, quiz)
+	}
+
+	return quizzes
+}
+
 func main() {
 	// Load the CSV file
 	dataFile, err := loadQuizzesFile()
@@ -26,6 +48,7 @@ func main() {
 	}
 
 	// Parse its content
+	parseDataQuizzes(dataFile)
 
 	// Map into struct the read content
 

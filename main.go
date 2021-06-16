@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/csv"
+	"flag"
 	"fmt"
 	"log"
 	"math/rand"
@@ -23,8 +24,12 @@ type Turn struct {
 	totalWrongAnswer   int
 }
 
+var (
+	file = flag.String("csv", "./problems.csv", "Path to the file containing the quizzes")
+)
+
 func loadQuizzesFile() ([][]string, error) {
-	file, err := os.Open("./problems.csv")
+	file, err := os.Open(*file)
 	if err != nil {
 		return nil, fmt.Errorf("error encountered when opening quizzes file, %v", err)
 	}
@@ -56,6 +61,8 @@ func parseDataQuizzes(dataQuizzes [][]string) Quizzes {
 }
 
 func main() {
+	flag.Parse()
+
 	// Load the CSV file
 	dataFile, err := loadQuizzesFile()
 	if err != nil {

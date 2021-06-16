@@ -17,14 +17,6 @@ type Quiz struct {
 
 type Quizzes = []Quiz
 
-type Question struct {
-	quizId  int
-	answer  string
-	correct bool
-}
-
-type Questions = []Question
-
 type Turn struct {
 	totalQuestions     int
 	totalCorrectAnswer int

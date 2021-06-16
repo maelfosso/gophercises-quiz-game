@@ -4,7 +4,9 @@ import (
 	"encoding/csv"
 	"fmt"
 	"log"
+	"math/rand"
 	"os"
+	"time"
 )
 
 type Quiz struct {
@@ -37,6 +39,11 @@ func parseDataQuizzes(dataQuizzes [][]string) Quizzes {
 		quizzes = append(quizzes, quiz)
 	}
 
+	rand.Seed(time.Now().UnixNano())
+	rand.Shuffle(len(quizzes), func(i, j int) {
+		quizzes[i], quizzes[j] = quizzes[j], quizzes[i]
+	})
+
 	return quizzes
 }
 
@@ -50,7 +57,6 @@ func main() {
 	// Parse its content
 	parseDataQuizzes(dataFile)
 
-	// Map into struct the read content
-
 	// Loop through all the quizzes for the user to solve them
+	// for
 }

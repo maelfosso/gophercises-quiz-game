@@ -4,7 +4,6 @@ import (
 	"encoding/csv"
 	"flag"
 	"fmt"
-	"log"
 	"math/rand"
 	"os"
 	"time"
@@ -25,7 +24,8 @@ type Turn struct {
 }
 
 var (
-	file = flag.String("csv", "./problems.csv", "Path to the file containing the quizzes")
+	file     = flag.String("csv", "./problems.csv", "Path to the file containing the quizzes")
+	duration = flag.Int("duration", 30, "Max time to answer")
 )
 
 func loadQuizzesFile() ([][]string, error) {
@@ -60,13 +60,40 @@ func parseDataQuizzes(dataQuizzes [][]string) Quizzes {
 	return quizzes
 }
 
+type RInputTimer struct {
+	timeout    bool
+	input      string
+	inputError bool
+}
+
+func readInput(r chan RInputTimer) {
+	var input string
+	_, err := fmt.Scanf("%s", &input)
+
+	if err != nil {
+		r <- RInputTimer{
+			timeout:    false,
+			inputError: true,
+		}
+	} else {
+		r <- RInputTimer{
+			timeout:    false,
+			input:      input,
+			inputError: false,
+		}
+	}
+
+}
+
 func main() {
 	flag.Parse()
+
+	var durationIsOk string
 
 	// Load the CSV file
 	dataFile, err := loadQuizzesFile()
 	if err != nil {
-		log.Fatalf("error occured when loading quizzes file, %v", err)
+		exit(fmt.Sprintf("error occured when loading quizzes file, %v", err))
 	}
 
 	// Parse its content
@@ -82,33 +109,50 @@ func main() {
 		totalWrongAnswer:   0,
 	}
 
+	fmt.Println("The Maximum time for the quiz is ", *duration, " seconds")
+	fmt.Println("Press enter to continue or Ctrl+C to stop the program and restart it with another duration")
+	fmt.Scanf("%s", &durationIsOk)
+	t := time.After(time.Duration(*duration) * time.Second)
+
+problemloop:
 	for _, quiz := range quizzes {
-		var answer string
 
 		fmt.Printf("%s > ", quiz.question)
 
-		_, err := fmt.Scanf("%s", &answer)
-		if err != nil {
-			turn.totalWrongAnswer += 1
-		} else {
+		r := make(chan RInputTimer)
+		go readInput(r)
 
-			if answer == "Q" {
-				break
-			}
-
-			turn.totalQuestions += 1
-
-			if answer == quiz.answer {
-				turn.totalCorrectAnswer += 1
-			} else {
+		select {
+		case v := <-r:
+			if v.inputError {
 				turn.totalWrongAnswer += 1
-			}
-		}
+			} else {
 
+				if v.input == "Q" {
+					break problemloop
+				}
+
+				turn.totalQuestions += 1
+
+				if v.input == quiz.answer {
+					turn.totalCorrectAnswer += 1
+				} else {
+					turn.totalWrongAnswer += 1
+				}
+			}
+
+		case <-t:
+			break problemloop
+		}
 	}
 
 	fmt.Println("\nResults:")
 	fmt.Println("\tTotal Number of Questions: \t", turn.totalQuestions)
 	fmt.Println("\tTotal Number of Corrent Answers: \t", turn.totalCorrectAnswer)
 	fmt.Println("\tTotal Number of Wrong Answers: \t", turn.totalWrongAnswer)
+}
+
+func exit(msg string) {
+	fmt.Println(msg)
+	os.Exit(1)
 }
